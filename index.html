@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boss Yu Team - 案件管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen font-['Inter']">
+    <!-- 登录页面 -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
+            <!-- 背景装饰 -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full -translate-y-16 translate-x-16 opacity-20"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full translate-y-12 -translate-x-12 opacity-20"></div>
+
+            <div class="text-center mb-10 relative z-10">
+                <!-- Logo -->
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Boss Yu Team</h1>
+                <p class="text-gray-400 mt-2">律师事务所投融资团队</p>
+            </div>
+
+            <form id="login-form" class="space-y-5 relative z-10">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">邮箱</label>
+                    <div class="relative">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                        </svg>
+                        <input type="email" id="login-email" required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-blue-500 transition"
+                            placeholder="请输入邮箱">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">密码</label>
+                    <div class="relative">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <input type="password" id="login-password" required
+                            class="w-full pl-12 pr-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-0 focus:border-blue-500 transition"
+                            placeholder="请输入密码">
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-purple-700 transition font-medium shadow-lg shadow-blue-500/30">
+                    登录
+                </button>
+            </form>
+            <div id="login-error" class="mt-4 text-red-500 text-sm text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-app" class="hidden">
+        <!-- 顶部导航 -->
+        <nav class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50 border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex justify-between h-16">
+                    <!-- Logo -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <span class="font-bold text-xl text-gray-800">Boss Yu Team</span>
+                    </div>
+
+                    <!-- 导航菜单 -->
+                    <div class="flex items-center space-x-1">
+                        <button onclick="showSection('dashboard', event)" class="nav-btn active px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                            </svg>
+                            工作台
+                        </button>
+                        <button onclick="showSection('cases', event)" class="nav-btn px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                            项目
+                        </button>
+                        <button onclick="showSection('tasks', event)" class="nav-btn px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                            任务
+                        </button>
+                        <button onclick="showSection('calendar', event)" class="nav-btn px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            日历
+                        </button>
+                        <button onclick="showSection('time', event)" class="nav-btn px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            工时
+                        </button>
+                        <button onclick="showSection('users', event)" id="users-nav" class="nav-btn hidden px-4 py-2 rounded-lg font-medium transition">
+                            <svg class="w-5 h-5 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                            团队
+                        </button>
+                    </div>
+
+                    <!-- 用户信息 -->
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium" id="user-avatar">
+                            </div>
+                            <div class="hidden sm:block">
+                                <span id="user-name" class="text-gray-700 font-medium"></span>
+                                <span id="user-role" class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs"></span>
+                            </div>
+                        </div>
+                        <button id="logout-btn" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <!-- 工作台 -->
+            <section id="dashboard-section" class="section-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 左侧：进行中的项目 + 最新动态 -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- 进行中的项目 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                    </svg>
+                                    进行中的项目
+                                </h3>
+                                <span id="active-count" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">0</span>
+                            </div>
+                            <div id="active-projects" class="space-y-4">
+                                <div class="text-gray-400 text-center py-10">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                                    </svg>
+                                    暂无进行中的项目
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 最新动态 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                    </svg>
+                                    最新动态
+                                </h3>
+                            </div>
+                            <div id="recent-activities" class="space-y-3">
+                                <div class="text-gray-400 text-center py-10">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    暂无动态
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：我的任务 + 即将到期 -->
+                    <div class="space-y-6">
+                        <!-- 我的任务 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    我的任务
+                                </h3>
+                                <span id="my-task-count" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">0</span>
+                            </div>
+                            <div id="my-tasks-dashboard" class="space-y-3">
+                                <div class="text-gray-400 text-center py-6">暂无待办任务</div>
+                            </div>
+                        </div>
+
+                        <!-- 即将到期 -->
+                        <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-sm border border-orange-100 p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    即将到期
+                                </h3>
+                                <span id="due-count" class="px-3 py-1 bg-orange-200 text-orange-700 rounded-full text-sm font-medium">0</span>
+                            </div>
+                            <div id="due-tasks" class="space-y-3">
+                                <div class="text-gray-400 text-center py-6">暂无即将到期任务</div>
+                            </div>
+                        </div>
+
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20">
+                                <div class="text-3xl font-bold" id="stat-cases">0</div>
+                                <div class="text-blue-100 mt-1 text-sm">总项目数</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-purple-500/20">
+                                <div class="text-3xl font-bold" id="stat-hours">0</div>
+                                <div class="text-purple-100 mt-1 text-sm">本月工时</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 项目管理 -->
+            <section id="cases-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">项目管理</h2>
+                        <p class="text-gray-500 mt-1">管理所有投融资项目</p>
+                    </div>
+                    <button onclick="showCaseModal()" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-700 hover:to-purple-700 transition font-medium shadow-lg shadow-blue-500/30 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        新建项目
+                    </button>
+                </div>
+
+                <!-- 筛选 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap gap-4">
+                    <select id="filter-type" class="border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-blue-500">
+                        <option value="">全部类型</option>
+                        <option value="投融资项目">投融资项目</option>
+                        <option value="并购重组">并购重组</option>
+                        <option value="法律尽调">法律尽调</option>
+                        <option value="常法咨询">常法咨询</option>
+                        <option value="其他类型">其他类型</option>
+                    </select>
+                    <select id="filter-status" class="border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-blue-500">
+                        <option value="">全部状态</option>
+                        <option value="进行中">进行中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="暂停">暂停</option>
+                    </select>
+                    <div class="relative flex-1 min-w-[200px]">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input type="text" id="filter-search" placeholder="搜索项目名称或客户..."
+                            class="w-full pl-12 pr-4 py-2.5 border-2 border-gray-100 rounded-xl focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- 项目列表 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cases-grid">
+                    <!-- 动态加载 -->
+                </div>
+            </section>
+
+            <!-- 任务管理 -->
+            <section id="tasks-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">任务管理</h2>
+                        <p class="text-gray-500 mt-1">管理所有待办任务</p>
+                    </div>
+                    <button onclick="showTaskModal()" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:from-green-700 hover:to-emerald-700 transition font-medium shadow-lg shadow-green-500/30 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        新建任务
+                    </button>
+                </div>
+
+                <!-- 任务筛选 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap gap-4">
+                    <select id="task-filter-project" class="border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-green-500">
+                        <option value="">全部项目</option>
+                    </select>
+                    <select id="task-filter-status" class="border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-green-500">
+                        <option value="">全部状态</option>
+                        <option value="待处理">待处理</option>
+                        <option value="进行中">进行中</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                    <select id="task-filter-assignee" class="border-2 border-gray-100 rounded-xl px-4 py-2.5 focus:border-green-500">
+                        <option value="">全部负责人</option>
+                    </select>
+                </div>
+
+                <!-- 任务列表 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">任务内容</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">所属项目</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">状态</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">负责人</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">截止日期</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-list" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="text-center py-10 text-gray-400">暂无任务</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 日历 -->
+            <section id="calendar-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">日历</h2>
+                        <p class="text-gray-500 mt-1">查看项目和任务时间安排</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="prevMonth()" class="p-2 rounded-lg hover:bg-gray-100 transition">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <span id="calendar-title" class="text-lg font-semibold text-gray-700"></span>
+                        <button onclick="nextMonth()" class="p-2 rounded-lg hover:bg-gray-100 transition">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <button onclick="goToday()" class="ml-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition">今天</button>
+                    </div>
+                </div>
+
+                <!-- 日历视图 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <!-- 星期标题 -->
+                    <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-100">
+                        <div class="text-center py-3 font-medium text-gray-500">周日</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周一</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周二</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周三</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周四</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周五</div>
+                        <div class="text-center py-3 font-medium text-gray-500">周六</div>
+                    </div>
+                    <!-- 日期格子 -->
+                    <div id="calendar-grid" class="grid grid-cols-7">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 图例 -->
+                <div class="mt-4 flex items-center space-x-6 text-sm">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                        <span class="text-gray-600">项目阶段</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                        <span class="text-gray-600">任务截止</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                        <span class="text-gray-600">即将到期</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 工时记录 -->
+            <section id="time-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">工时记录</h2>
+                        <p class="text-gray-500 mt-1">记录工作时间</p>
+                    </div>
+                    <button onclick="showTimeModal()" class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-5 py-2.5 rounded-xl hover:from-cyan-700 hover:to-blue-700 transition font-medium shadow-lg shadow-cyan-500/30 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        手动录入
+                    </button>
+                </div>
+
+                <!-- 实时计时器 -->
+                <div class="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        实时计时器
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <select id="timer-case" class="bg-white/20 border-0 rounded-xl px-4 py-3 flex-1 min-w-[200px] text-white placeholder-white/70">
+                            <option value="" class="text-gray-700">选择项目</option>
+                        </select>
+                        <input type="text" id="timer-desc" placeholder="工作内容描述..."
+                            class="bg-white/20 border-0 rounded-xl px-4 py-3 flex-1 min-w-[200px] text-white placeholder-white/70">
+                        <div id="timer-display" class="text-4xl font-mono font-bold px-6 min-w-[150px] text-center">00:00:00</div>
+                        <button id="timer-start-btn" onclick="startTimer()" class="bg-white text-cyan-600 px-6 py-3 rounded-xl hover:bg-white/90 transition font-bold shadow-lg flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            开始
+                        </button>
+                        <button id="timer-stop-btn" onclick="stopTimer()" class="bg-red-500 text-white px-6 py-3 rounded-xl hover:bg-red-600 transition font-bold shadow-lg hidden flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                            停止
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 工时列表 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">日期</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">项目</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">工作内容</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">时长</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">记录方式</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="time-list" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="text-center py-10 text-gray-400">暂无工时记录</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 用户管理 -->
+            <section id="users-section" class="section-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">团队管理</h2>
+                        <p class="text-gray-500 mt-1">管理团队成员和权限</p>
+                    </div>
+                    <button onclick="showUserModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-700 transition font-medium shadow-lg shadow-purple-500/30 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加成员
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">成员</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">邮箱</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">角色</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">加入时间</th>
+                                <th class="text-left px-6 py-4 text-sm font-medium text-gray-500">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list" class="divide-y divide-gray-100">
+                            <tr><td colspan="5" class="text-center py-10 text-gray-400">暂无团队成员</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 项目弹窗 -->
+    <div id="case-modal" class="modal hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="case-modal-title">新建项目</h3>
+                <button onclick="closeCaseModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="case-form" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">项目名称</label>
+                    <input type="text" id="case-name" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">客户名称</label>
+                    <input type="text" id="case-client" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">项目类型</label>
+                    <select id="case-type" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-blue-500">
+                        <option value="投融资项目">投融资项目</option>
+                        <option value="并购重组">并购重组</option>
+                        <option value="法律尽调">法律尽调</option>
+                        <option value="常法咨询">常法咨询</option>
+                        <option value="其他类型">其他类型</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">优先级</label>
+                    <select id="case-priority" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-blue-500">
+                        <option value="高">高</option>
+                        <option value="中" selected>中</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">负责人</label>
+                    <select id="case-assigned" multiple class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-blue-500 min-h-[100px]">
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">可多选</p>
+                </div>
+                <input type="hidden" id="case-id">
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeCaseModal()" class="px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 font-medium">取消</button>
+                <button onclick="saveCase()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-medium shadow-lg shadow-blue-500/30">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务弹窗 -->
+    <div id="task-modal" class="modal hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="task-modal-title">新建任务</h3>
+                <button onclick="closeTaskModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="task-form" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">任务内容</label>
+                    <input type="text" id="task-content" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">所属项目</label>
+                    <select id="task-project" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-green-500">
+                        <option value="">独立任务（无项目）</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">负责人</label>
+                    <select id="task-assignee" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-green-500">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">截止日期</label>
+                    <input type="date" id="task-due-date" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">状态</label>
+                    <select id="task-status" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-green-500">
+                        <option value="待处理">待处理</option>
+                        <option value="进行中">进行中</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                </div>
+                <input type="hidden" id="task-id">
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeTaskModal()" class="px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 font-medium">取消</button>
+                <button onclick="saveTask()" class="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-medium shadow-lg shadow-green-500/30">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工时弹窗 -->
+    <div id="time-modal" class="modal hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800">手动录入工时</h3>
+                <button onclick="closeTimeModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="time-form" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">项目</label>
+                    <select id="time-case" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-cyan-500">
+                        <option value="">选择项目</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">工作内容</label>
+                    <input type="text" id="time-desc" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">日期</label>
+                    <input type="date" id="time-date" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">时长 (小时)</label>
+                    <input type="number" id="time-hours" min="0.5" step="0.5" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-cyan-500">
+                </div>
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeTimeModal()" class="px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 font-medium">取消</button>
+                <button onclick="saveTimeEntry()" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl hover:from-cyan-700 hover:to-blue-700 font-medium shadow-lg shadow-cyan-500/30">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 用户弹窗 -->
+    <div id="user-modal" class="modal hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="user-modal-title">添加成员</h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="user-form" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">姓名</label>
+                    <input type="text" id="user-input-name" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">邮箱</label>
+                    <input type="email" id="user-input-email" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">角色</label>
+                    <select id="user-input-role" required class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500">
+                        <option value="admin">管理员</option>
+                        <option value="partner">合伙人</option>
+                        <option value="lawyer">律师</option>
+                        <option value="assistant">助理</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">初始密码</label>
+                    <input type="password" id="user-input-password" class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:border-purple-500" placeholder="编辑时留空保持原密码">
+                </div>
+                <input type="hidden" id="user-id">
+            </form>
+            <div class="p-6 border-t border-gray-100 flex justify-end space-x-3">
+                <button onclick="closeUserModal()" class="px-5 py-2.5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 font-medium">取消</button>
+                <button onclick="saveUser()" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-medium shadow-lg shadow-purple-500/30">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目详情弹窗 -->
+    <div id="case-detail-modal" class="modal hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-xl font-semibold text-gray-800" id="detail-case-name">项目详情</h3>
+                <button onclick="closeCaseDetailModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <!-- 基本信息 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-gray-500 text-sm mb-1">客户</div>
+                        <div id="detail-client" class="font-medium text-gray-800"></div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-gray-500 text-sm mb-1">类型</div>
+                        <div id="detail-type" class="font-medium text-gray-800"></div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-gray-500 text-sm mb-1">状态</div>
+                        <div id="detail-status" class="font-medium"></div>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-gray-500 text-sm mb-1">优先级</div>
+                        <div id="detail-priority" class="font-medium text-gray-800"></div>
+                    </div>
+                </div>
+
+                <!-- 进度阶段 -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        进度阶段
+                    </h4>
+                    <div id="detail-stages" class="space-y-3"></div>
+                    <button onclick="addStage()" class="mt-4 text-blue-600 hover:text-blue-700 font-medium flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加阶段
+                    </button>
+                </div>
+
+                <!-- 项目任务 -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        项目任务
+                    </h4>
+                    <div id="detail-tasks" class="space-y-3"></div>
+                    <button onclick="addTaskForCase()" class="mt-4 text-green-600 hover:text-green-700 font-medium flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        添加任务
+                    </button>
+                </div>
+
+                <!-- 工时统计 -->
+                <div>
+                    <h4 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 text-cyan-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        工时统计
+                    </h4>
+                    <div id="detail-hours" class="bg-cyan-50 rounded-xl p-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/cases.js"></script>
+    <script src="js/tasks.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/users.js"></script>
+</body>
+</html>
